@@ -19,14 +19,14 @@ model_name = st.selectbox(
     ["Logistic Regression", "Decision Tree", "kNN", "Naive Bayes", "Random Forest", "XGBoost"]
 )
 
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    if 'Class' in df.columns:
-    X = df.drop('Class', axis=1)
-    y = df['Class']
-else:
-    X = df
-    y = None
+    if uploaded_file:
+        df = pd.read_csv(uploaded_file)
+        if 'Class' in df.columns:
+        X = df.drop('Class', axis=1)
+        y = df['Class']
+    else:
+        X = df
+        y = None
 
 
     if y is not None:
