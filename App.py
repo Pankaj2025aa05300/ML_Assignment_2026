@@ -21,11 +21,18 @@ model_name = st.selectbox(
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
+    if 'Class' in df.columns:
     X = df.drop('Class', axis=1)
     y = df['Class']
+else:
+    X = df
+    y = None
 
+
+    if y is not None:
     le = LabelEncoder()
     y = le.fit_transform(y)
+
 
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
@@ -47,9 +54,15 @@ if uploaded_file:
             eval_metric='mlogloss'
         )
 
-    model.fit(X, y)
-    y_pred = model.predict(X)
+    model.fit(X, y) if y is not None else model.fit(X, np.zeros(len(X)))
 
+y_pred = model.predict(X)
+
+if y is not None:
     st.subheader("Classification Report")
     st.text(classification_report(y, y_pred))
+else:
+    st.subheader("Prediction Output")
+    st.write(pd.DataFrame(y_pred, columns=["Predicted Class"]))
+
 
