@@ -37,4 +37,4 @@ if uploaded_file is not None:
         st.text(classification_report(y, y_pred))
     else:
         st.subheader("Predictions")
-        st.write(pd
+        st.write(pd.DataFrame(y_pred, columns=["Predicted Class"]))
