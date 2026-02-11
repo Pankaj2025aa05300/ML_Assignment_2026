@@ -1,3 +1,5 @@
+import sys
+st.write("Python version:", sys.version)
 import streamlit as st
 import pickle
 import numpy as np
