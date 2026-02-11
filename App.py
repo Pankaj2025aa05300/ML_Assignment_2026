@@ -1,5 +1,3 @@
-import sys
-st.write("Python version:", sys.version)
 import streamlit as st
 import pickle
 import numpy as np
@@ -38,6 +36,8 @@ def load_models():
 # -----------------------------
 # Main Streamlit App
 # -----------------------------
+import sys
+st.write("Python version:", sys.version)
 def main():
     st.set_page_config(page_title="Dry Bean Classification", layout="wide")
     st.title("🌱 Dry Bean Classification App")
