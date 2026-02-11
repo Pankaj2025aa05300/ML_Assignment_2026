@@ -1,118 +1,46 @@
 import streamlit as st
-import pandas as pd
 import pickle
-import os
+import numpy as np
+import pandas as pd
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    matthews_corrcoef,
-    confusion_matrix,
-    classification_report
-)
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# ----------------------------------
-# Page Config
-# ----------------------------------
-st.set_page_config(
-    page_title="Dry Bean Classification",
-    layout="wide"
-)
-
-st.title("Dry Bean Classification – ML Model Comparison")
-st.write("Upload test data and select a trained model to evaluate performance.")
-
-# ----------------------------------
-# Load Models & Encoder
-# ----------------------------------
-# @st.cache_resource
+# -----------------------------
+# Load models safely (NO caching, NO top-level loading)
+# -----------------------------
 def load_models():
-    models = {
-        "Logistic Regression": pickle.load(open("model/logistic_regression.pkl", "rb")),
-        "Decision Tree": pickle.load(open("model/decision_tree.pkl", "rb")),
-        "KNN": pickle.load(open("model/knn.pkl", "rb")),
-        "Naive Bayes": pickle.load(open("model/naive_bayes.pkl", "rb")),
-        "Random Forest": pickle.load(open("model/random_forest.pkl", "rb")),
-        "XGBoost": pickle.load(open("model/xgboost.pkl", "rb")),
-    }
-    label_encoder = pickle.load(open("model/label_encoder.pkl", "rb"))
-    return models, label_encoder
+    models = {}
 
-models, label_encoder = load_models()
+    with open("model/random_forest.pkl", "rb") as f:
+        models["Random Forest"] = pickle.load(f)
 
-# ----------------------------------
-# Sidebar
-# ----------------------------------
-st.sidebar.header("User Input")
+    with open("model/logistic_regression.pkl", "rb") as f:
+        models["Logistic Regression"] = pickle.load(f)
 
-model_name = st.sidebar.selectbox(
-    "Select ML Model",
-    list(models.keys())
-)
+    with open("model/decision_tree.pkl", "rb") as f:
+        models["Decision Tree"] = pickle.load(f)
 
-uploaded_file = st.sidebar.file_uploader(
-    "Upload Test Dataset (CSV)",
-    type=["csv"]
-)
+    with open("model/knn.pkl", "rb") as f:
+        models["KNN"] = pickle.load(f)
 
-# ----------------------------------
-# Main Logic
-# ----------------------------------
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+    with open("model/naive_bayes.pkl", "rb") as f:
+        models["Naive Bayes"] = pickle.load(f)
 
-    st.subheader("Dataset Preview")
-    st.dataframe(df.head())
+    with open("model/xgboost.pkl", "rb") as f:
+        models["XGBoost"] = pickle.load(f)
 
-    if "Class" not in df.columns:
-        st.error("❌ Uploaded dataset must contain 'Class' column")
-    else:
-        X_test = df.drop("Class", axis=1)
-        y_test = df["Class"]
+    with open("model/label_encoder.pkl", "rb") as f:
+        models["Label Encoder"] = pickle.load(f)
 
-        model = models[model_name]
-        y_pred = model.predict(X_test)
+    return models
 
-        # ----------------------------------
-        # Metrics
-        # ----------------------------------
-        accuracy = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred, average="weighted")
-        recall = recall_score(y_test, y_pred, average="weighted")
-        f1 = f1_score(y_test, y_pred, average="weighted")
-        mcc = matthews_corrcoef(y_test, y_pred)
 
-        st.subheader("Evaluation Metrics")
+# -----------------------------
+# Main Streamlit App
+# -----------------------------
+def main():
+    st.set_page_config(page_title="Dry Bean Classification", layout="wide")
+    st.title("🌱 Dry Bean Classification App")
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Accuracy", f"{accuracy:.4f}")
-        col1.metric("Precision", f"{precision:.4f}")
-
-        col2.metric("Recall", f"{recall:.4f}")
-        col2.metric("F1 Score", f"{f1:.4f}")
-
-        col3.metric("MCC", f"{mcc:.4f}")
-
-        # ----------------------------------
-        # Confusion Matrix
-        # ----------------------------------
-        st.subheader("Confusion Matrix")
-
-        cm = confusion_matrix(y_test, y_pred)
-
-        fig, ax = plt.subplots(figsize=(6, 4))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=ax)
-        ax.set_xlabel("Predicted Label")
-        ax.set_ylabel("True Label")
-        st.pyplot(fig)
-
-        # ----------------------------------
-        # Classification Report
-        # ----------------------------------
-        st.subheader("Classification Report")
-        st.text(classification_report(y_test, y_pred))
+    st.write(
+        """
+        This application predicts the **class of Dry Beans**
+        using multiple Machine Learn
