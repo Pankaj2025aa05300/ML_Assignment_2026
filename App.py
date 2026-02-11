@@ -30,7 +30,7 @@ st.write("Upload test data and select a trained model to evaluate performance.")
 # ----------------------------------
 # Load Models & Encoder
 # ----------------------------------
-@st.cache_resource
+# @st.cache_resource
 def load_models():
     models = {
         "Logistic Regression": pickle.load(open("model/logistic_regression.pkl", "rb")),
