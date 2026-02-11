@@ -33,14 +33,14 @@ st.write("Upload test data and select a trained model to evaluate performance.")
 @st.cache_resource
 def load_models():
     models = {
-        "Logistic Regression": pickle.load(open("models/logistic_regression.pkl", "rb")),
-        "Decision Tree": pickle.load(open("models/decision_tree.pkl", "rb")),
-        "KNN": pickle.load(open("models/knn.pkl", "rb")),
-        "Naive Bayes": pickle.load(open("models/naive_bayes.pkl", "rb")),
-        "Random Forest": pickle.load(open("models/random_forest.pkl", "rb")),
-        "XGBoost": pickle.load(open("models/xgboost.pkl", "rb")),
+        "Logistic Regression": pickle.load(open("model/logistic_regression.pkl", "rb")),
+        "Decision Tree": pickle.load(open("model/decision_tree.pkl", "rb")),
+        "KNN": pickle.load(open("model/knn.pkl", "rb")),
+        "Naive Bayes": pickle.load(open("model/naive_bayes.pkl", "rb")),
+        "Random Forest": pickle.load(open("model/random_forest.pkl", "rb")),
+        "XGBoost": pickle.load(open("model/xgboost.pkl", "rb")),
     }
-    label_encoder = pickle.load(open("models/label_encoder.pkl", "rb"))
+    label_encoder = pickle.load(open("model/label_encoder.pkl", "rb"))
     return models, label_encoder
 
 models, label_encoder = load_models()
