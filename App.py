@@ -45,13 +45,18 @@ if os.path.exists("test_data.csv"):
 # Model Selection
 # ----------------------------------------------------------
 
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 model_options = {
-    "Logistic Regression": "saved_models/logistic_regression.pkl",
-    "Decision Tree": "saved_models/decision_tree.pkl",
-    "KNN": "saved_models/knn.pkl",
-    "Naive Bayes": "saved_models/naive_bayes.pkl",
-    "Random Forest": "saved_models/random_forest.pkl",
-    "XGBoost": "saved_models/xgboost.pkl"
+    "Logistic Regression": os.path.join(BASE_DIR, "model", "saved_models", "logistic_regression.pkl"),
+    "Decision Tree": os.path.join(BASE_DIR, "model", "saved_models", "decision_tree.pkl"),
+    "KNN": os.path.join(BASE_DIR, "model", "saved_models", "knn.pkl"),
+    "Naive Bayes": os.path.join(BASE_DIR, "model", "saved_models", "naive_bayes.pkl"),
+    "Random Forest": os.path.join(BASE_DIR, "model", "saved_models", "random_forest.pkl"),
+    "XGBoost": os.path.join(BASE_DIR, "model", "saved_models", "xgboost.pkl")
+}
 }
 
 selected_model_name = st.selectbox("Select Model", list(model_options.keys()))
