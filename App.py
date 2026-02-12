@@ -1,99 +1,147 @@
+# ==========================================================
+# DRY BEAN CLASSIFICATION - STREAMLIT APP
+# ==========================================================
+
 import streamlit as st
-import pickle
-import numpy as np
 import pandas as pd
+import numpy as np
+import pickle
+import os
 
-# -----------------------------
-# Load models safely
-# -----------------------------
-def load_models():
-    models = {}
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+    matthews_corrcoef,
+    confusion_matrix,
+    classification_report
+)
 
-    with open("model/random_forest.pkl", "rb") as f:
-        models["Random Forest"] = pickle.load(f)
+# ----------------------------------------------------------
+# Page Configuration
+# ----------------------------------------------------------
 
-    with open("model/logistic_regression.pkl", "rb") as f:
-        models["Logistic Regression"] = pickle.load(f)
+st.set_page_config(page_title="Dry Bean Classification", layout="wide")
 
-    with open("model/decision_tree.pkl", "rb") as f:
-        models["Decision Tree"] = pickle.load(f)
+st.title("🌱 Dry Bean Classification App")
+st.markdown("Upload test dataset and evaluate selected ML model.")
 
-    with open("model/knn.pkl", "rb") as f:
-        models["KNN"] = pickle.load(f)
+# ----------------------------------------------------------
+# Download Sample Test Dataset
+# ----------------------------------------------------------
 
-    with open("model/naive_bayes.pkl", "rb") as f:
-        models["Naive Bayes"] = pickle.load(f)
+if os.path.exists("test_data.csv"):
+    with open("test_data.csv", "rb") as file:
+        st.download_button(
+            label="Download Sample Test Dataset",
+            data=file,
+            file_name="test_data.csv",
+            mime="text/csv"
+        )
 
-    with open("model/xgboost.pkl", "rb") as f:
-        models["XGBoost"] = pickle.load(f)
+# ----------------------------------------------------------
+# Model Selection
+# ----------------------------------------------------------
 
-    with open("model/label_encoder.pkl", "rb") as f:
-        label_encoder = pickle.load(f)
+model_options = {
+    "Logistic Regression": "saved_models/logistic_regression.pkl",
+    "Decision Tree": "saved_models/decision_tree.pkl",
+    "KNN": "saved_models/knn.pkl",
+    "Naive Bayes": "saved_models/naive_bayes.pkl",
+    "Random Forest": "saved_models/random_forest.pkl",
+    "XGBoost": "saved_models/xgboost.pkl"
+}
 
-    with open("model/scaler.pkl", "rb") as f:
-        scaler = pickle.load(f)
+selected_model_name = st.selectbox("Select Model", list(model_options.keys()))
 
-    return models, label_encoder, scaler
+# ----------------------------------------------------------
+# Dataset Upload
+# ----------------------------------------------------------
 
+uploaded_file = st.file_uploader("Upload Test CSV File", type=["csv"])
 
-# -----------------------------
-# Main App
-# -----------------------------
-def main():
-    st.set_page_config(page_title="Dry Bean Classification", layout="wide")
-    st.title("🌱 Dry Bean Classification App")
+if uploaded_file is not None:
 
-    models, label_encoder, scaler = load_models()
+    df = pd.read_csv(uploaded_file)
 
-    feature_names = [
-        "Area", "Perimeter", "MajorAxisLength", "MinorAxisLength",
-        "AspectRation", "Eccentricity", "ConvexArea", "EquivDiameter",
-        "Extent", "Solidity", "roundness", "Compactness",
-        "ShapeFactor1", "ShapeFactor2", "ShapeFactor3", "ShapeFactor4"
-    ]
+    st.subheader("Uploaded Dataset Preview")
+    st.write(df.head())
 
-    st.sidebar.header("🔢 Input Features")
+    if "Class" not in df.columns:
+        st.error("Uploaded file must contain 'Class' column as target.")
+    else:
+        X = df.drop("Class", axis=1)
+        y = df["Class"]
 
-    user_input = []
-    for feature in feature_names:
-        value = st.sidebar.number_input(feature, min_value=0.0, value=1.0)
-        user_input.append(value)
+        # ------------------------------------------------------
+        # Load Selected Model
+        # ------------------------------------------------------
 
-    input_array = np.array(user_input).reshape(1, -1)
+        model_path = model_options[selected_model_name]
 
-    st.sidebar.header("🤖 Select Model")
-    model_name = st.sidebar.selectbox(
-        "Choose a model:",
-        list(models.keys())
-    )
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
 
-    if st.button("🔍 Predict"):
-        model = models[model_name]
+        # ------------------------------------------------------
+        # Make Predictions
+        # ------------------------------------------------------
 
-        # Scale only if required
-        if model_name in ["Logistic Regression", "KNN"]:
-            input_array = scaler.transform(input_array)
+        y_pred = model.predict(X)
 
-        prediction_encoded = model.predict(input_array)[0]
-        prediction_label = label_encoder.inverse_transform(
-            [prediction_encoded]
-        )[0]
+        try:
+            y_proba = model.predict_proba(X)
+            auc = roc_auc_score(y, y_proba, multi_class="ovr")
+        except:
+            auc = "Not Available"
 
-        st.success(f"### ✅ Predicted Dry Bean Class: **{prediction_label}**")
+        # ------------------------------------------------------
+        # Calculate Metrics
+        # ------------------------------------------------------
 
-        if hasattr(model, "predict_proba"):
-            probs = model.predict_proba(input_array)[0]
-            prob_df = pd.DataFrame({
-                "Class": label_encoder.classes_,
-                "Probability": probs
-            }).sort_values(by="Probability", ascending=False)
+        acc = accuracy_score(y, y_pred)
+        precision = precision_score(y, y_pred, average="weighted")
+        recall = recall_score(y, y_pred, average="weighted")
+        f1 = f1_score(y, y_pred, average="weighted")
+        mcc = matthews_corrcoef(y, y_pred)
 
-            st.subheader("📊 Prediction Probabilities")
-            st.dataframe(prob_df, use_container_width=True)
+        # ------------------------------------------------------
+        # Display Metrics
+        # ------------------------------------------------------
 
+        st.subheader("Evaluation Metrics")
 
-# -----------------------------
-# Run App
-# -----------------------------
-if __name__ == "__main__":
-    main()
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Accuracy", round(acc, 4))
+        col2.metric("AUC Score", auc if isinstance(auc, str) else round(auc, 4))
+        col3.metric("Precision", round(precision, 4))
+
+        col4, col5, col6 = st.columns(3)
+
+        col4.metric("Recall", round(recall, 4))
+        col5.metric("F1 Score", round(f1, 4))
+        col6.metric("MCC Score", round(mcc, 4))
+
+        # ------------------------------------------------------
+        # Confusion Matrix
+        # ------------------------------------------------------
+
+        st.subheader("Confusion Matrix")
+
+        cm = confusion_matrix(y, y_pred)
+        st.write(cm)
+
+        # ------------------------------------------------------
+        # Classification Report
+        # ------------------------------------------------------
+
+        st.subheader("Classification Report")
+
+        report = classification_report(y, y_pred, output_dict=True)
+        report_df = pd.DataFrame(report).transpose()
+        st.dataframe(report_df)
+
+else:
+    st.info("Please upload a test CSV file to evaluate the model.")
