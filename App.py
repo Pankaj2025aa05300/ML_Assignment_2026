@@ -1,7 +1,3 @@
-# ==========================================================
-# DRY BEAN CLASSIFICATION - STREAMLIT APP
-# ==========================================================
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,41 +10,31 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
-    matthews_corrcoef,
-    confusion_matrix,
-    classification_report
+    matthews_corrcoef
 )
 
-# ----------------------------------------------------------
+# -------------------------------
 # Page Configuration
-# ----------------------------------------------------------
+# -------------------------------
+st.set_page_config(page_title="Dry Bean Model Comparison", layout="wide")
+st.title("🌱 Dry Bean Classification - Model Comparison")
 
-st.set_page_config(page_title="Dry Bean Classification", layout="wide")
-
-st.title("🌱 Dry Bean Classification App")
-st.markdown("Upload test dataset and evaluate selected ML model.")
-
-# ----------------------------------------------------------
-# Download Sample Test Dataset
-# ----------------------------------------------------------
-
-if os.path.exists("test_data.csv"):
-    with open("test_data.csv", "rb") as file:
-        st.download_button(
-            label="Download Sample Test Dataset",
-            data=file,
-            file_name="test_data.csv",
-            mime="text/csv"
-        )
-
-# ----------------------------------------------------------
-# Model Selection
-# ----------------------------------------------------------
-
-import os
-
+# -------------------------------
+# Base Directory
+# -------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# -------------------------------
+# Load Scaler
+# -------------------------------
+scaler_path = os.path.join(BASE_DIR, "model", "saved_models", "scaler.pkl")
+
+with open(scaler_path, "rb") as f:
+    scaler = pickle.load(f)
+
+# -------------------------------
+# Model Dictionary
+# -------------------------------
 model_options = {
     "Logistic Regression": os.path.join(BASE_DIR, "model", "saved_models", "Logistic_Regression.pkl"),
     "Decision Tree": os.path.join(BASE_DIR, "model", "saved_models", "Decision_Tree.pkl"),
@@ -58,98 +44,78 @@ model_options = {
     "XGBoost": os.path.join(BASE_DIR, "model", "saved_models", "XGBoost.pkl")
 }
 
-selected_model_name = st.selectbox("Select Model", list(model_options.keys()))
+# -------------------------------
+# Sidebar - Model Selection
+# -------------------------------
+st.sidebar.header("Select Model")
+selected_model_name = st.sidebar.selectbox(
+    "Choose a model:",
+    list(model_options.keys())
+)
 
-# ----------------------------------------------------------
-# Dataset Upload
-# ----------------------------------------------------------
-
-uploaded_file = st.file_uploader("Upload Test CSV File", type=["csv"])
+# -------------------------------
+# File Upload
+# -------------------------------
+uploaded_file = st.file_uploader("Upload Dry Bean CSV File", type=["csv"])
 
 if uploaded_file is not None:
 
     df = pd.read_csv(uploaded_file)
 
-    st.subheader("Uploaded Dataset Preview")
-    st.write(df.head())
-
     if "Class" not in df.columns:
-        st.error("Uploaded file must contain 'Class' column as target.")
-    else:
-        from sklearn.preprocessing import LabelEncoder
-        X = df.drop("Class", axis=1)
-        y = df["Class"]
+        st.error("❌ CSV must contain 'Class' column.")
+        st.stop()
 
-# Encode class labels (same as training logic)
-        label_encoder = LabelEncoder()
-        y = label_encoder.fit_transform(y)
-        # ------------------------------------------------------
-        # Load Selected Model
-        # ------------------------------------------------------
+    X = df.drop("Class", axis=1)
+    y = df["Class"]
 
-        model_path = model_options[selected_model_name]
+    # Encode target consistently
+    y_encoded, class_names = pd.factorize(y)
 
-        with open(model_path, "rb") as f:
-            model = pickle.load(f)
+    # Scale features
+    X_scaled = scaler.transform(X)
 
-        # ------------------------------------------------------
-        # Make Predictions
-        # ------------------------------------------------------
+    # Load Selected Model
+    model_path = model_options[selected_model_name]
 
-        y_pred = model.predict(X)
+    with open(model_path, "rb") as f:
+        model = pickle.load(f)
 
-        try:
-            y_proba = model.predict_proba(X)
-            auc = roc_auc_score(y, y_proba, multi_class="ovr")
-        except:
-            auc = "Not Available"
+    # Predictions
+    y_pred = model.predict(X_scaled)
 
-        # ------------------------------------------------------
-        # Calculate Metrics
-        # ------------------------------------------------------
+    # Some models may not support predict_proba
+    try:
+        y_proba = model.predict_proba(X_scaled)
+        auc = roc_auc_score(y_encoded, y_proba, multi_class='ovr')
+    except:
+        auc = np.nan
 
-        acc = accuracy_score(y, y_pred)
-        precision = precision_score(y, y_pred, average="weighted")
-        recall = recall_score(y, y_pred, average="weighted")
-        f1 = f1_score(y, y_pred, average="weighted")
-        mcc = matthews_corrcoef(y, y_pred)
+    # Metrics
+    accuracy = accuracy_score(y_encoded, y_pred)
+    precision = precision_score(y_encoded, y_pred, average='weighted')
+    recall = recall_score(y_encoded, y_pred, average='weighted')
+    f1 = f1_score(y_encoded, y_pred, average='weighted')
+    mcc = matthews_corrcoef(y_encoded, y_pred)
 
-        # ------------------------------------------------------
-        # Display Metrics
-        # ------------------------------------------------------
+    # -------------------------------
+    # Display Results
+    # -------------------------------
+    st.subheader(f"📊 Performance of {selected_model_name}")
 
-        st.subheader("Evaluation Metrics")
+    evaluation_dict = {
+        "AUC Score": auc,
+        "Accuracy": accuracy,
+        "Precision": precision,
+        "Recall": recall,
+        "F1 Score": f1,
+        "MCC Score": mcc
+    }
 
-        col1, col2, col3 = st.columns(3)
+    results_df = pd.DataFrame(evaluation_dict, index=[selected_model_name])
+    st.dataframe(results_df)
 
-        col1.metric("Accuracy", round(acc, 4))
-        col2.metric("AUC Score", auc if isinstance(auc, str) else round(auc, 4))
-        col3.metric("Precision", round(precision, 4))
-
-        col4, col5, col6 = st.columns(3)
-
-        col4.metric("Recall", round(recall, 4))
-        col5.metric("F1 Score", round(f1, 4))
-        col6.metric("MCC Score", round(mcc, 4))
-
-        # ------------------------------------------------------
-        # Confusion Matrix
-        # ------------------------------------------------------
-
-        st.subheader("Confusion Matrix")
-
-        cm = confusion_matrix(y, y_pred)
-        st.write(cm)
-
-        # ------------------------------------------------------
-        # Classification Report
-        # ------------------------------------------------------
-
-        st.subheader("Classification Report")
-
-        report = classification_report(y, y_pred, output_dict=True)
-        report_df = pd.DataFrame(report).transpose()
-        st.dataframe(report_df)
+    st.success("✅ Model evaluation completed successfully!")
 
 else:
-    st.info("Please upload a test CSV file to evaluate the model.")
+    st.info("Please upload a CSV file to evaluate the model.")
