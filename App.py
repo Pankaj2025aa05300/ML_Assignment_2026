@@ -26,7 +26,6 @@ st.title("🌱 Dry Bean Classification - Model Evaluation")
 # Base Directory
 # -------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 MODEL_DIR = os.path.join(BASE_DIR, "model", "saved_models")
 
 # -------------------------------------------------
@@ -40,6 +39,18 @@ if not os.path.exists(scaler_path):
 
 with open(scaler_path, "rb") as f:
     scaler = pickle.load(f)
+
+# -------------------------------------------------
+# Load Label Encoder
+# -------------------------------------------------
+label_encoder_path = os.path.join(MODEL_DIR, "label_encoder.pkl")
+
+if not os.path.exists(label_encoder_path):
+    st.error("❌ label_encoder.pkl not found inside model/saved_models/")
+    st.stop()
+
+with open(label_encoder_path, "rb") as f:
+    label_encoder = pickle.load(f)
 
 # -------------------------------------------------
 # Model Paths
@@ -70,21 +81,33 @@ uploaded_file = st.file_uploader("📂 Upload Test Dataset (CSV only)", type=["c
 if uploaded_file is not None:
 
     df = pd.read_csv(uploaded_file)
+    df.columns = df.columns.str.strip()
 
     if "Class" not in df.columns:
         st.error("❌ Dataset must contain 'Class' column.")
         st.stop()
 
+    # Separate features and target
     X = df.drop("Class", axis=1)
     y = df["Class"]
 
-    # Encode labels
-    y_encoded, class_names = pd.factorize(y)
+    # Ensure feature order matches training
+    try:
+        X = X[scaler.feature_names_in_]
+    except:
+        pass
+
+    # Encode labels using SAME encoder as training
+    try:
+        y_encoded = label_encoder.transform(y)
+    except Exception:
+        st.error("❌ Label mismatch between training and uploaded dataset.")
+        st.stop()
 
     # Apply saved scaler
     try:
         X_scaled = scaler.transform(X)
-    except Exception as e:
+    except Exception:
         st.error("❌ Feature mismatch between training and uploaded dataset.")
         st.stop()
 
@@ -147,9 +170,14 @@ if uploaded_file is not None:
     # -------------------------------------------------
     st.subheader("📝 Classification Report")
 
-    report = classification_report(y_encoded, y_pred, output_dict=True)
-    report_df = pd.DataFrame(report).transpose()
+    report = classification_report(
+        y_encoded,
+        y_pred,
+        target_names=label_encoder.classes_,
+        output_dict=True
+    )
 
+    report_df = pd.DataFrame(report).transpose()
     st.dataframe(report_df)
 
     st.success("✅ Model evaluation completed successfully!")
