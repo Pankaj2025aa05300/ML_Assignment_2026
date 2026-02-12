@@ -41,18 +41,6 @@ with open(scaler_path, "rb") as f:
     scaler = pickle.load(f)
 
 # -------------------------------------------------
-# Load Label Encoder
-# -------------------------------------------------
-label_encoder_path = os.path.join(MODEL_DIR, "label_encoder.pkl")
-
-if not os.path.exists(label_encoder_path):
-    st.error("❌ label_encoder.pkl not found inside model/saved_models/")
-    st.stop()
-
-with open(label_encoder_path, "rb") as f:
-    label_encoder = pickle.load(f)
-
-# -------------------------------------------------
 # Model Paths
 # -------------------------------------------------
 model_options = {
@@ -89,20 +77,13 @@ if uploaded_file is not None:
 
     # Separate features and target
     X = df.drop("Class", axis=1)
-    y = df["Class"]
+    y = df["Class"]   # Keep original string labels
 
-    # Ensure feature order matches training
+    # Ensure column order matches training (important!)
     try:
         X = X[scaler.feature_names_in_]
     except:
         pass
-
-    # Encode labels using SAME encoder as training
-    try:
-        y_encoded = label_encoder.transform(y)
-    except Exception:
-        st.error("❌ Label mismatch between training and uploaded dataset.")
-        st.stop()
 
     # Apply saved scaler
     try:
@@ -126,10 +107,10 @@ if uploaded_file is not None:
     # Predictions
     y_pred = model.predict(X_scaled)
 
-    # AUC Score (if available)
+    # AUC Score (if supported)
     try:
         y_proba = model.predict_proba(X_scaled)
-        auc = roc_auc_score(y_encoded, y_proba, multi_class="ovr")
+        auc = roc_auc_score(y, y_proba, multi_class="ovr")
     except:
         auc = np.nan
 
@@ -137,12 +118,12 @@ if uploaded_file is not None:
     # Evaluation Metrics
     # -------------------------------------------------
     evaluation_dict = {
-        "Accuracy": accuracy_score(y_encoded, y_pred),
-        "Precision": precision_score(y_encoded, y_pred, average="weighted"),
-        "Recall": recall_score(y_encoded, y_pred, average="weighted"),
-        "F1 Score": f1_score(y_encoded, y_pred, average="weighted"),
+        "Accuracy": accuracy_score(y, y_pred),
+        "Precision": precision_score(y, y_pred, average="weighted"),
+        "Recall": recall_score(y, y_pred, average="weighted"),
+        "F1 Score": f1_score(y, y_pred, average="weighted"),
         "AUC Score": auc,
-        "MCC Score": matthews_corrcoef(y_encoded, y_pred)
+        "MCC Score": matthews_corrcoef(y, y_pred)
     }
 
     st.subheader("📊 Evaluation Metrics")
@@ -154,7 +135,7 @@ if uploaded_file is not None:
     # -------------------------------------------------
     st.subheader("📌 Confusion Matrix")
 
-    cm = confusion_matrix(y_encoded, y_pred)
+    cm = confusion_matrix(y, y_pred)
 
     fig, ax = plt.subplots()
     im = ax.imshow(cm)
@@ -170,14 +151,9 @@ if uploaded_file is not None:
     # -------------------------------------------------
     st.subheader("📝 Classification Report")
 
-    report = classification_report(
-        y_encoded,
-        y_pred,
-        target_names=label_encoder.classes_,
-        output_dict=True
-    )
-
+    report = classification_report(y, y_pred, output_dict=True)
     report_df = pd.DataFrame(report).transpose()
+
     st.dataframe(report_df)
 
     st.success("✅ Model evaluation completed successfully!")
