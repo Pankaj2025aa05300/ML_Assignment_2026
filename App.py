@@ -76,9 +76,13 @@ if uploaded_file is not None:
     if "Class" not in df.columns:
         st.error("Uploaded file must contain 'Class' column as target.")
     else:
+        from sklearn.preprocessing import LabelEncoder
         X = df.drop("Class", axis=1)
         y = df["Class"]
 
+# Encode class labels (same as training logic)
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
         # ------------------------------------------------------
         # Load Selected Model
         # ------------------------------------------------------
