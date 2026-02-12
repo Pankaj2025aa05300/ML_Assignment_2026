@@ -50,12 +50,12 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 model_options = {
-    "Logistic Regression": os.path.join(BASE_DIR, "model", "saved_models", "logistic_regression.pkl"),
-    "Decision Tree": os.path.join(BASE_DIR, "model", "saved_models", "decision_tree.pkl"),
-    "KNN": os.path.join(BASE_DIR, "model", "saved_models", "knn.pkl"),
-    "Naive Bayes": os.path.join(BASE_DIR, "model", "saved_models", "naive_bayes.pkl"),
-    "Random Forest": os.path.join(BASE_DIR, "model", "saved_models", "random_forest.pkl"),
-    "XGBoost": os.path.join(BASE_DIR, "model", "saved_models", "xgboost.pkl")
+    "Logistic Regression": os.path.join(BASE_DIR, "model", "saved_models", "Logistic_Regression.pkl"),
+    "Decision Tree": os.path.join(BASE_DIR, "model", "saved_models", "Decision_Tree.pkl"),
+    "KNN": os.path.join(BASE_DIR, "model", "saved_models", "KNN.pkl"),
+    "Naive Bayes": os.path.join(BASE_DIR, "model", "saved_models", "Naive_Bayes.pkl"),
+    "Random Forest": os.path.join(BASE_DIR, "model", "saved_models", "Random_Forest.pkl"),
+    "XGBoost": os.path.join(BASE_DIR, "model", "saved_models", "XGBoost.pkl")
 }
 
 selected_model_name = st.selectbox("Select Model", list(model_options.keys()))
