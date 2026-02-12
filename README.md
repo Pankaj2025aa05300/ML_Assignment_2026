@@ -1,6 +1,20 @@
 **Problem Statement**
 
-This assignment task aims to implement and comparatively analyze six supervised machine learning classification algorithms using the Dry Bean Dataset, obtained from the UCI Machine Learning Repository. It is a publicly available benchmark dataset commonly used for multi-class classification research in agricultural and food quality analysis. The dataset consists of morphological and geometric features extracted from dry bean samples belonging to seven distinct classes. The primary objective is to develop predictive models capable of accurately classifying bean varieties based on these quantitative attributes. Multi-class classification problems in agricultural datasets present several challenges, including high inter-feature correlation, potential class overlap, and variability in feature distributions. Selecting an appropriate model requires careful evaluation of both predictive performance and generalization capability. Therefore, this assignment not only focuses on model implementation but also emphasizes systematic performance benchmarking across diverse algorithmic approaches. The selected models represent different learning paradigms, including linear models (Logistic Regression), tree-based models (Decision Tree), distance-based methods (K-Nearest Neighbors), probabilistic models (Naive Bayes), and ensemble techniques such as bagging (Random Forest) and boosting (XGBoost). By comparing these models using multiple evaluation metrics—Accuracy, AUC, Precision, Recall, F1 Score, and Matthews Correlation Coefficient (MCC)—the assignment aims to identify the most robust and reliable classification approach for the given dataset. Finally, this comparative analysis provides insights into the effectiveness of ensemble learning methods relative to individual classifiers in solving complex multi-class classification problems.
+This assignment aims to implement and comparatively analyze six supervised machine learning classification algorithms using the Dry Bean Dataset from the UCI Machine Learning Repository. The dataset is a publicly available benchmark commonly used for multi-class classification research in agricultural analytics and food quality assessment. The dataset consists of morphological and geometric features extracted from dry bean samples belonging to seven distinct classes. The primary objective is to develop predictive models capable of accurately classifying bean varieties based on quantitative shape-related attributes.Multi-class classification in agricultural datasets presents several challenges, including High inter-feature correlation,Potential class overlap,Variability in feature distributions,Non-linear relationships between features. Therefore, this assignment emphasizes both model implementation and systematic benchmarking across diverse algorithmic paradigms. The selected models represent different learning approaches: 
+
+Linear Model: Logistic Regression
+
+Tree-Based Model: Decision Tree
+
+Distance-Based Method: K-Nearest Neighbors
+
+Probabilistic Model: Naive Bayes
+
+Ensemble – Bagging: Random Forest
+
+Ensemble – Boosting: XGBoost
+
+Performance is evaluated using multiple metrics to ensure comprehensive assessment and robust comparison.
 
 **Dataset Description**
 
@@ -11,7 +25,7 @@ Dataset URL: https://archive.ics.uci.edu/ml/datasets/Dry+Bean+Dataset
 
 •	The dataset includes 7 distinct bean classes, making it a multi-class classification problem. The objective is to correctly classify each bean sample based on its morphological characteristics.
 
-•	The dataset was divided into 80% training (10,888 samples) and 20% testing (2,723 samples). Feature scaling was applied to normalize numerical attributes and improve model performance.
+•	The dataset was divided into 90% training (12,249 samples) and 10% testing (1,362 samples). Feature scaling was applied to normalize numerical attributes and improve model performance.
 
 **Models Implemented**
 
@@ -23,15 +37,16 @@ Dataset URL: https://archive.ics.uci.edu/ml/datasets/Dry+Bean+Dataset
 
 •	Naive Bayes (GaussianNB)
 
-•	Random Forest (Ensemble)
+•	Random Forest (Ensemble – Bagging)
 
-•	XGBoost (Ensemble Boosting)
+•	XGBoost (Ensemble - Boosting)
 
 
 **Evaluation Metrics Used**
+
 •	Accuracy
 
-•	AUC Score
+•	AUC Score (One-vs-Rest for multi-class)
 
 •	Precision (Weighted)
 
@@ -44,24 +59,25 @@ Dataset URL: https://archive.ics.uci.edu/ml/datasets/Dry+Bean+Dataset
 
 **Model Comparison Table**
 
-| Model Name            | Accuracy | AUC     | Precision| Recall  | F1 Score | MCC     |
-|-----------------------|----------|---------|----------|---------|----------|---------|
-| XGBoost               | 0.9258   | 0.9954  | 0.9258   | 0.9258  | 0.9258   | 0.9103  |
-| Logistic Regression   | 0.9207   | 0.9948  | 0.9215   | 0.9207  | 0.9209   | 0.9042  |
-| Random Forest         | 0.9192   | 0.9939  | 0.9195   | 0.9192  | 0.9192   | 0.9023  |
-| KNN                   | 0.9166   | 0.9833  | 0.9174   | 0.9166  | 0.9168   | 0.8992  |
-| Decision Tree         | 0.9023   | 0.9595  | 0.9026   | 0.9023  | 0.9024   | 0.8819  |
-| Naive Bayes           | 0.8979   | 0.9916  | 0.9007   | 0.8979  | 0.8981   | 0.8773  |
+| Model               | Accuracy   | AUC Score | Precision | Recall | F1 Score | MCC Score  |
+| ------------------- | ---------- | --------- | --------- | ------ | -------- | ---------- |
+| XGBoost             | 0.9324     | 0.9964    | 0.9324    | 0.9324 | 0.9323   | 0.9183     |
+| Logistic Regression | 0.9310     | 0.9960    | 0.9312    | 0.9310 | 0.9310   | 0.9165     |
+| KNN                 | 0.9266     | 0.9917    | 0.9270    | 0.9266 | 0.9266   | 0.9112     |
+| Random Forest       | 0.9244     | 0.9953    | 0.9249    | 0.9244 | 0.9245   | 0.9086     |
+| Naive Bayes         | 0.9001     | 0.9938    | 0.9014    | 0.9001 | 0.9002   | 0.8796     |
+| Decision Tree       | 0.8979     | 0.9679    | 0.8980    | 0.8979 | 0.8979   | 0.8765     |
+
 
 **Observations**
 
 | ML Model            | Performance Observation |
 |----------           |--------------------------|
-| Logistic Regression | Achieved high accuracy (92.07%) and strong AUC, indicating good linear separability among bean classes. Demonstrated stable and consistent performance across categories. |
-| Decision Tree       | Produced moderate accuracy (90.23%). Although interpretable, it showed signs of slight overfitting compared to ensemble methods. |
-| K-Nearest Neighbors (KNN) | Performed well (91.66%) after feature scaling. Sensitive to distance metrics but delivered competitive results. |
-| Naive Bayes | Computationally efficient but achieved the lowest accuracy (89.79%). Performance may be affected due to the assumption of feature independence. |
-| Random Forest (Ensemble – Bagging) | Improved generalization over Decision Tree by reducing variance. Delivered strong and stable performance (91.92%). |
-| XGBoost (Ensemble – Boosting) | Achieved the best overall performance (92.58% accuracy, highest MCC). Boosting effectively minimized classification errors and enhanced predictive power. |
+| Logistic Regression | Demonstrated strong and stable performance (93.10% accuracy) with high AUC. The results suggest that the dataset exhibits relatively well-separated and discriminative feature patterns, enabling effective linear classification. |
+| Decision Tree       | Achieved moderate accuracy (89.79%). While interpretable, it showed signs of overfitting compared to ensemble methods. |
+| K-Nearest Neighbors (KNN) | Performed competitively (92.66%) after feature scaling. As a distance-based method, its performance was influenced by normalized feature space representation. |
+| Naive Bayes | Computationally efficient but achieved lower accuracy (90.01%). The independence assumption among features may limit its performance on correlated morphological attributes. |
+| Random Forest (Ensemble – Bagging) | Improved generalization compared to a single Decision Tree by reducing variance. Delivered stable and strong predictive performance (92.44%). |
+| XGBoost (Ensemble – Boosting) | Achieved the highest overall performance across most evaluation metrics, including Accuracy and MCC. Boosting effectively captured complex feature interactions and minimized classification errors. |
 
 
